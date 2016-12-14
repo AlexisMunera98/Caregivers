@@ -1,10 +1,12 @@
 package com.example.gabriel.caregivers;
 
+
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
+
+
 import android.support.design.widget.NavigationView;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -23,15 +25,6 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -40,7 +33,10 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+
     }
+
 
     @Override
     public void onBackPressed() {
@@ -74,28 +70,48 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
 
-        } else if (id == R.id.nav_slideshow) {
+        Fragment fragment = null;
+        if (id == R.id.nav_perfil) {
+            Bundle arg = new Bundle();
+            arg.putString("datos", "Perfil asdf");
+            fragment = FragmentPerfil.newInstance(arg);
+        } else if (id == R.id.nav_informes) {
+            Bundle arg = new Bundle();
+            arg.putString("datos", "Informe mjghd");
+            fragment = FragmentInforme.newInstance(arg);
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_pacientes) {
+            Bundle arg = new Bundle();
+            arg.putString("datos", "Paciente ñlkj");
+            fragment = FragmentPaciente.newInstance(arg);
 
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_recordatorios) {
+            Bundle arg = new Bundle();
+            arg.putString("datos", "Recodatorio qwer");
+            fragment = FragmentRecordatorio.newInstance(arg);
+        } else if (id == R.id.nav_enfermedad) {
+            Bundle arg = new Bundle();
+            arg.putString("datos", "Enfermedad poiu");
+            fragment = FragmentEnfermedad.newInstance(arg);
+        }
 
-        } else if (id == R.id.nav_send) {
-
+        if (fragment != null) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.content_main, fragment);
+            ft.commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
 }
