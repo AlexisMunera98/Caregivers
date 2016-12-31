@@ -26,8 +26,11 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.io.File;
+
 import de.hdodenhof.circleimageview.CircleImageView;
+
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.support.v4.content.ContextCompat.checkSelfPermission;
@@ -38,21 +41,15 @@ import static android.support.v4.content.ContextCompat.checkSelfPermission;
 
 
 public class FragmentPerfil extends Fragment {
-    private TextView edtNombreCuidador;
-    private TextView edtApellidoCuidador;
-    private ImageButton imgEditPerfil;
-    private ImageButton imgActualizarPerfil;
+    private TextView edtNombreCuidador,edtApellidoCuidador;
+    private ImageButton imgEditPerfil, imgActualizarPerfil, imgEditFotoPerfil;
     private CircleImageView imgPerfil;
     private Button btnCambiarContraseña;
-    private ImageButton imgEditFotoPerfil;
-
     private String mPath;
     private Intent intento;
-
     private final int MY_PERMISSIONS = 100;
     private static int R_ABRIR_CAMARA = 200;
     private static int SELECT_PICTURE = 300;
-
     private static String APP_DIRECTORY = "Caregivers/";
     private static String MEDIA_DIRECTORY = APP_DIRECTORY + "Caregivers";
 
@@ -75,6 +72,7 @@ public class FragmentPerfil extends Fragment {
         }
         return f;
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -82,9 +80,9 @@ public class FragmentPerfil extends Fragment {
         View v = inflater.inflate(R.layout.fragment_perfil, container, false);
         importarComponentes(v);
         declararAccionComponentes();
-
         return v;
     }
+
     /**
      * Método que define las acciones de los componenetes gráficos.
      */
@@ -131,6 +129,7 @@ public class FragmentPerfil extends Fragment {
             }
         });
     }
+
     /**
      * Método que importa los componentes gráficos desde el xml.
      *
@@ -142,9 +141,14 @@ public class FragmentPerfil extends Fragment {
         imgEditPerfil = (ImageButton) v.findViewById(R.id.imgEditPerfil);
         imgActualizarPerfil = (ImageButton) v.findViewById(R.id.imgActualizarPerfil);
         imgPerfil = (CircleImageView) v.findViewById(R.id.imgPerfil);
+
         btnCambiarContraseña = (Button) v.findViewById(R.id.btnCambiarContraseña);
         imgEditFotoPerfil = (ImageButton) v.findViewById(R.id.imgEditFotoPerfil);
+        if(mPath!=null){
+            imgPerfil.setImageBitmap(BitmapFactory.decodeFile(mPath));
+        }
     }
+
     /**
      * Método que crea un dialogo para cambiar la contraseña
      *
@@ -157,11 +161,12 @@ public class FragmentPerfil extends Fragment {
         builder.setView(v);
         return builder.create();
     }
+
     /**
      * Método que crea el dialogo para abrir galeria o camara.
      */
     private void crearDialogoEditFoto() {
-        final CharSequence[] option = {"Cámara", "Galería","Eliminar foto"};
+        final CharSequence[] option = {"Cámara", "Galería", "Eliminar foto"};
         final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("Elige una opción");
         builder.setItems(option, new DialogInterface.OnClickListener() {
@@ -173,14 +178,16 @@ public class FragmentPerfil extends Fragment {
                     Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                     intent.setType("image/*");
                     startActivityForResult(intent.createChooser(intent, "Selecciona app de imagen"), SELECT_PICTURE);
-                }else if (option[which] == "Eliminar foto"){
+                } else if (option[which] == "Eliminar foto") {
                     imgPerfil.setImageResource(R.drawable.ic_perfil);
                     mPath = "";
+                    ((MainActivity) getActivity()).actualizarImagen(mPath);
                 }
             }
         });
         builder.show();
     }
+
     /**
      * Metodo que determina si los permisos estan aceptados o no
      *
@@ -196,6 +203,7 @@ public class FragmentPerfil extends Fragment {
         }
         return false;
     }
+
     /**
      * Método que recibe el resultado de la peticion de permisos
      *
@@ -211,6 +219,7 @@ public class FragmentPerfil extends Fragment {
             }
         }
     }
+
     /**
      * Método que abre la camara del celular
      */
@@ -230,6 +239,7 @@ public class FragmentPerfil extends Fragment {
             startActivityForResult(intento, R_ABRIR_CAMARA);
         }
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -257,12 +267,12 @@ public class FragmentPerfil extends Fragment {
             Uri uri = data.getData();
             mPath = getRealPathFromURI(getContext(), uri);
             int orientacion = getCameraPhotoOrientation(getContext(), uri, mPath);
-            if (orientacion != 0) {
-                rotateBitmap(orientacion);
-            }
+            rotateBitmap(orientacion);
+
 
         }
     }
+
     /**
      * Método que obtiene la direccion desde un Uri.
      *
@@ -284,6 +294,7 @@ public class FragmentPerfil extends Fragment {
             }
         }
     }
+
     /**
      * Método que obtiene la orientacion de una imagen
      *
@@ -315,6 +326,7 @@ public class FragmentPerfil extends Fragment {
         }
         return rotate;
     }
+
     /**
      * Método que abre una imagen para su visualización
      *
@@ -328,14 +340,14 @@ public class FragmentPerfil extends Fragment {
         intent.setAction(Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.fromFile(new File(path)), "image/*");
         startActivity(intent);
-
     }
+
     /**
      * Método que rota un bitmap
      *
      * @param x Angulo de rotacióon
      */
-    void rotateBitmap(float x) {
+   private void rotateBitmap(float x) {
         Bitmap btm = BitmapFactory.decodeFile(mPath);
         if (x != 0) {
             Matrix matrix = new Matrix();
@@ -343,5 +355,10 @@ public class FragmentPerfil extends Fragment {
             btm = Bitmap.createBitmap(btm, 0, 0, btm.getWidth(), btm.getHeight(), matrix, true);
         }
         imgPerfil.setImageBitmap(btm);
+        ((MainActivity) getActivity()).actualizarImagen(mPath);
+    }
+
+    public String getmPath(){
+        return mPath;
     }
 }
