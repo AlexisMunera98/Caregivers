@@ -50,10 +50,13 @@
                     android:layout_marginTop="42dp"
                     android:background="@drawable/shape"
                     android:ems="10"
-                    android:enabled="false"
+
                     android:gravity="center_vertical|center"
+                    android:hapticFeedbackEnabled="true"
                     android:hint="Nombre Cuidador"
-                    android:inputType="textPersonName" />
+                    android:inputType="textPersonName"
+                    android:enabled="true"
+                    android:textColor="@android:color/black" />
 
                 <EditText
                     android:id="@+id/edtApellidoCuidador"
@@ -67,10 +70,11 @@
                     android:layout_marginTop="12dp"
                     android:background="@drawable/shape"
                     android:ems="10"
-                    android:enabled="false"
                     android:gravity="center_vertical|center"
                     android:hint="Apellido Cuidador"
-                    android:inputType="textPersonName" />
+                    android:inputType="textPersonName"
+                    android:enabled="true"
+                    android:textColor="@android:color/black" />
 
                 <Button
                     android:id="@+id/btnCambiarContraseña"

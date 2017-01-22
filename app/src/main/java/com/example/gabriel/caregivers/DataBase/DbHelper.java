@@ -1,4 +1,4 @@
-package com.example.gabriel.caregivers;
+package com.example.gabriel.caregivers.DataBase;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;

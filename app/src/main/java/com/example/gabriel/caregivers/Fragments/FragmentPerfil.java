@@ -1,4 +1,4 @@
-package com.example.gabriel.caregivers;
+package com.example.gabriel.caregivers.Fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -18,6 +18,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,6 +27,10 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.gabriel.caregivers.Activities.MainActivity;
+import com.example.gabriel.caregivers.DataBase.DataBaseManager;
+import com.example.gabriel.caregivers.R;
 
 import java.io.File;
 
@@ -41,10 +46,12 @@ import static android.support.v4.content.ContextCompat.checkSelfPermission;
 
 
 public class FragmentPerfil extends Fragment {
-    private TextView edtNombreCuidador,edtApellidoCuidador;
+    private TextView edtNombreCuidador, edtApellidoCuidador;
     private ImageButton imgEditPerfil, imgActualizarPerfil, imgEditFotoPerfil;
     private CircleImageView imgPerfil;
-    private Button btnCambiarContraseña;
+    private Button btnCambiarContraseña, btnAceptarCambioContraseña;
+    private EditText edtContraseñaActual, edtNuevaContraseña, edtConfirmarContraseña;
+    private AlertDialog alertDialog;
     private String mPath;
     private Intent intento;
     private final int MY_PERMISSIONS = 100;
@@ -78,8 +85,13 @@ public class FragmentPerfil extends Fragment {
                              Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View v = inflater.inflate(R.layout.fragment_perfil, container, false);
+
         importarComponentes(v);
         declararAccionComponentes();
+        String[] datos = ((MainActivity) getActivity()).getDbManager().getDatosCuidador(((MainActivity) getActivity()).getCedula());
+        edtNombreCuidador.setText(datos[0]);
+        edtApellidoCuidador.setText(datos[1]);
+
         return v;
     }
 
@@ -87,6 +99,8 @@ public class FragmentPerfil extends Fragment {
      * Método que define las acciones de los componenetes gráficos.
      */
     private void declararAccionComponentes() {
+        edtNombreCuidador.setEnabled(false);
+        edtApellidoCuidador.setEnabled(false);
         imgEditPerfil.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,12 +117,27 @@ public class FragmentPerfil extends Fragment {
                 imgActualizarPerfil.setVisibility(View.INVISIBLE);
                 edtNombreCuidador.setEnabled(false);
                 edtApellidoCuidador.setEnabled(false);
+
+                String newNombre = edtNombreCuidador.getText().toString();
+                String newApellido = edtApellidoCuidador.getText().toString();
+                String cedula = ((MainActivity) getActivity()).getCedula();
+
+
+                Log.d("Nombre: ", newNombre);
+                Log.d("Apellido: ", newApellido);
+                Log.d("Cedula: ", cedula);
+
+                ((MainActivity) getActivity()).getDbManager().actualizarNombreApellidoCuidador(newNombre, newApellido, cedula);
+                Toast.makeText(getContext(), "Datos actualizados", Toast.LENGTH_SHORT).show();
+
+
             }
         });
         btnCambiarContraseña.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                crearDialogoCambiarContraseña().show();
+
+                alertDialog.show();
             }
         });
         imgEditFotoPerfil.setOnClickListener(new View.OnClickListener() {
@@ -128,6 +157,33 @@ public class FragmentPerfil extends Fragment {
 
             }
         });
+
+        btnAceptarCambioContraseña.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DataBaseManager dbManager = ((MainActivity) getActivity()).getDbManager();
+                String claveActual = edtContraseñaActual.getText().toString();
+                String nuevaClave = edtNuevaContraseña.getText().toString();
+                String confirmarClave = edtConfirmarContraseña.getText().toString();
+                String cedula = ((MainActivity) getActivity()).getCedula();
+                if (claveActual.isEmpty() || nuevaClave.isEmpty() || confirmarClave.isEmpty()) {
+                    Toast.makeText(getContext(), "Hay campos vacios", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (dbManager.serLoginCorrecto(cedula, claveActual)) {
+                    if (nuevaClave.equals(confirmarClave)) {
+                        dbManager.actualizarClaveCuidador(nuevaClave, cedula);
+                        Toast.makeText(getContext(), "Contraseña actualizada", Toast.LENGTH_SHORT).show();
+                        alertDialog.dismiss();
+
+                    } else {
+                        Toast.makeText(getContext(), "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show();
+                    }
+
+                }
+            }
+        });
+
     }
 
     /**
@@ -136,6 +192,7 @@ public class FragmentPerfil extends Fragment {
      * @param v Vista del fragmento
      */
     private void importarComponentes(View v) {
+        alertDialog = crearDialogoCambiarContraseña();
         edtNombreCuidador = (EditText) v.findViewById(R.id.edtNombreCuidador);
         edtApellidoCuidador = (EditText) v.findViewById(R.id.edtApellidoCuidador);
         imgEditPerfil = (ImageButton) v.findViewById(R.id.imgEditPerfil);
@@ -144,10 +201,11 @@ public class FragmentPerfil extends Fragment {
 
         btnCambiarContraseña = (Button) v.findViewById(R.id.btnCambiarContraseña);
         imgEditFotoPerfil = (ImageButton) v.findViewById(R.id.imgEditFotoPerfil);
-        if(mPath!=null){
+        if (mPath != null) {
             imgPerfil.setImageBitmap(BitmapFactory.decodeFile(mPath));
         }
     }
+
 
     /**
      * Método que crea un dialogo para cambiar la contraseña
@@ -155,9 +213,15 @@ public class FragmentPerfil extends Fragment {
      * @return Diálogo para cambiar contraseña
      */
     public AlertDialog crearDialogoCambiarContraseña() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        LayoutInflater inflater = getActivity().getLayoutInflater();
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        final LayoutInflater inflater = getActivity().getLayoutInflater();
         View v = inflater.inflate(R.layout.dialogo_cambiar_password, null);
+        edtContraseñaActual = (EditText) v.findViewById(R.id.edtContraseñaActual);
+        edtNuevaContraseña = (EditText) v.findViewById(R.id.edtNuevaContraseña);
+        edtConfirmarContraseña = (EditText) v.findViewById(R.id.edtConfirmarContraseña);
+        btnAceptarCambioContraseña = (Button) v.findViewById(R.id.btnAceptarCambioContraseña);
+
+
         builder.setView(v);
         return builder.create();
     }
@@ -181,7 +245,10 @@ public class FragmentPerfil extends Fragment {
                 } else if (option[which] == "Eliminar foto") {
                     imgPerfil.setImageResource(R.drawable.ic_perfil);
                     mPath = "";
+                    String cedula = ((MainActivity) getActivity()).getCedula();
                     ((MainActivity) getActivity()).actualizarImagen(mPath);
+                    ((MainActivity) getActivity()).getDbManager().insertarFoto(cedula, mPath);
+
                 }
             }
         });
@@ -268,8 +335,6 @@ public class FragmentPerfil extends Fragment {
             mPath = getRealPathFromURI(getContext(), uri);
             int orientacion = getCameraPhotoOrientation(getContext(), uri, mPath);
             rotateBitmap(orientacion);
-
-
         }
     }
 
@@ -347,18 +412,19 @@ public class FragmentPerfil extends Fragment {
      *
      * @param x Angulo de rotacióon
      */
-   private void rotateBitmap(float x) {
-        Bitmap btm = BitmapFactory.decodeFile(mPath);
+    private void rotateBitmap(float x) {
+        Bitmap btmp = BitmapFactory.decodeFile(mPath);
+        ((MainActivity) getActivity()).getDbManager().insertarFoto(((MainActivity) getActivity()).getCedula(), mPath);
         if (x != 0) {
             Matrix matrix = new Matrix();
             matrix.postRotate(x);
-            btm = Bitmap.createBitmap(btm, 0, 0, btm.getWidth(), btm.getHeight(), matrix, true);
+            btmp = Bitmap.createBitmap(btmp, 0, 0, btmp.getWidth(), btmp.getHeight(), matrix, true);
         }
-        imgPerfil.setImageBitmap(btm);
-        ((MainActivity) getActivity()).actualizarImagen(mPath);
+        imgPerfil.setImageBitmap(btmp);
+        ((MainActivity) getActivity()).actualizarImagen(btmp);
     }
 
-    public String getmPath(){
+    public String getmPath() {
         return mPath;
     }
 }

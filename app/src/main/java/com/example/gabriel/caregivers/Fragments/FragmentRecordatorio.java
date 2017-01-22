@@ -1,4 +1,4 @@
-package com.example.gabriel.caregivers;
+package com.example.gabriel.caregivers.Fragments;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -7,33 +7,38 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.gabriel.caregivers.R;
+
 /**
  * Created by gabriel on 11/12/2016.
  */
 
-public class FragmentEnfermedad extends Fragment {
-
+public class FragmentRecordatorio extends Fragment {
     private TextView txt;
-    public FragmentEnfermedad() {
+
+    public FragmentRecordatorio() {
     }
 
-    public static FragmentEnfermedad newInstance(Bundle arg) {
-        FragmentEnfermedad fe = new FragmentEnfermedad();
+
+    public static FragmentRecordatorio newInstance(Bundle arg) {
+        FragmentRecordatorio fr = new FragmentRecordatorio();
         if (arg != null) {
-            fe.setArguments(arg);
+            fr.setArguments(arg);
         }
-        return fe;
+        return fr;
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        View v = inflater.inflate(R.layout.fragment_enfermedad, container, false);
-        txt = (TextView) v.findViewById(R.id.textView5);
+        View v = inflater.inflate(R.layout.fragment_recordatorio, container, false);
+        txt = (TextView) v.findViewById(R.id.textView4);
         Bundle b = getArguments();
         String datos = b.getString("datos");
         txt.setText(datos);
         return v;
     }
 }
+

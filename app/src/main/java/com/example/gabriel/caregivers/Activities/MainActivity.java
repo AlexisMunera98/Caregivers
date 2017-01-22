@@ -1,19 +1,18 @@
-package com.example.gabriel.caregivers;
+package com.example.gabriel.caregivers.Activities;
 
 
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-
-
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -22,6 +21,14 @@ import android.view.View;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.gabriel.caregivers.DataBase.DataBaseManager;
+import com.example.gabriel.caregivers.Fragments.FragmentEnfermedad;
+import com.example.gabriel.caregivers.Fragments.FragmentInforme;
+import com.example.gabriel.caregivers.Fragments.FragmentPaciente;
+import com.example.gabriel.caregivers.Fragments.FragmentPerfil;
+import com.example.gabriel.caregivers.Fragments.FragmentRecordatorio;
+import com.example.gabriel.caregivers.R;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -34,7 +41,9 @@ public class MainActivity extends AppCompatActivity
     private SearchView searchView;
     private View viewFiltro;
     private Menu menu;
-    public DataBaseManager dbManager;
+    private DataBaseManager dbManager;
+    private String cedula;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +57,9 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
+        Intent intento = getIntent();
+        cedula = intento.getStringExtra(loginActivity.CEDULA);
+
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -55,12 +67,6 @@ public class MainActivity extends AppCompatActivity
         declararAccionComponentes();
         fragments = new Fragment[5];
         dbManager = new DataBaseManager(getApplicationContext());
-        dbManager.insertarCuidador("1", "Juan1", "Benitez1", "321", "foto");
-        dbManager.insertarCuidador("2", "Juan2", "Benitez2", "321", "foto");
-        dbManager.insertarCuidador("3", "Juan3", "Benitez3", "321", "foto");
-        dbManager.insertarCuidador("4", "Juan4", "Benitez4", "321", "foto");
-
-
     }
 
 
@@ -68,7 +74,12 @@ public class MainActivity extends AppCompatActivity
         imgPerfilNav.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //CONSULTA A LA BD EL PATH CON CEDULA DEL CUIDADOR
+                String mPath = dbManager.getPathFoto(cedula);
+                if (!(mPath.isEmpty())) {
+                    ((FragmentPerfil) fragments[0]).abrirImagenConGaleria(mPath);
+                } else {
+                    Toast.makeText(getApplicationContext(), "No has elegido una imagen de perfil", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -76,14 +87,23 @@ public class MainActivity extends AppCompatActivity
     private void importarComponentes(NavigationView navigationView) {
         imgPerfilNav = (CircleImageView) navigationView.getHeaderView(0).findViewById(R.id.imgPerfilNav);
         edtNomCuidador = (TextView) navigationView.getHeaderView(0).findViewById(R.id.edtNomCuidador);
+
     }
 
     public void actualizarImagen(String path) {
         if (path.isEmpty()) {
             imgPerfilNav.setImageResource(R.drawable.ic_perfil);
+            return;
         }
         Bitmap btm = BitmapFactory.decodeFile(path);
         imgPerfilNav.setImageBitmap(btm);
+    }
+
+    public void actualizarImagen(Bitmap btmp) {
+        if (btmp != null) {
+            imgPerfilNav.setImageBitmap(btmp);
+        }
+
     }
 
     @Override
@@ -118,16 +138,37 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                ((FragmentPaciente) fragments[1]).getAdapter().getFilter().filter(newText);
+                if (newText.isEmpty()) {
+                    ((FragmentPaciente) fragments[1]).actualizarLista(newText);
+
+                }
+                ((FragmentPaciente) fragments[1]).actualizarLista(newText);
                 return false;
             }
         });
         viewFiltro.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Filtro", Toast.LENGTH_SHORT).show();
+                crearDialogoFiltro();
             }
         });
+    }
+
+    private void crearDialogoFiltro() {
+        final CharSequence[] option = {"Mis pacientes", "Todos los pacientes"};
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Filtrar por:");
+        builder.setItems(option, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (option[which] == "Mis pacientes") {
+                    Toast.makeText(getApplicationContext(), "Mis pacientes", Toast.LENGTH_SHORT).show();
+                } else if (option[which] == "Todos los pacientes") {
+                    Toast.makeText(getApplicationContext(), "Todos los pacientes", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        builder.show();
     }
 
     @Override
@@ -143,6 +184,7 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    //POR CORREGIR PUTS EN EL BUNDLE
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -221,6 +263,15 @@ public class MainActivity extends AppCompatActivity
             searchView.setVisibility(View.INVISIBLE);
             viewFiltro.setVisibility(View.INVISIBLE);
         }
+
+    }
+
+    public String getCedula() {
+        return cedula;
+    }
+
+    public DataBaseManager getDbManager() {
+        return dbManager;
 
     }
 
