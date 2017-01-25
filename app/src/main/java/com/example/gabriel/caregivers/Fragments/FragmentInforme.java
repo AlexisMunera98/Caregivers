@@ -5,7 +5,9 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.gabriel.caregivers.R;
 
@@ -16,6 +18,7 @@ import com.example.gabriel.caregivers.R;
 public class FragmentInforme extends Fragment {
 
     private TextView txt;
+    private Button btnPrueba;
     public FragmentInforme() {}
 
     public static FragmentInforme newInstance(Bundle arg) {
@@ -32,9 +35,18 @@ public class FragmentInforme extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
         View v = inflater.inflate(R.layout.fragment_informe, container, false);
         txt = (TextView) v.findViewById(R.id.textView6);
+        btnPrueba = (Button) v.findViewById(R.id.btnPrueba);
         Bundle b = getArguments();
         String datos = b.getString("datos");
         txt.setText(datos);
+
+        btnPrueba.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getContext(), "Esto es una prueba para Git", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         return v;
     }
 }
